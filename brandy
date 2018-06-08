@@ -1,0 +1,856 @@
+<?
+	include("sql.php");
+?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<link href="css.css" type="text/css" rel="stylesheet" />
+<head>
+<script src="js.js"></script>
+<script src="jquery-3.2.1.min.js"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Untitled Document</title>
+</head>
+
+<body>
+<img src="logo.png" style="position:relative; left:20px" />
+<div id="banner">
+<?
+	if($_COOKIE[m]!='m')
+	{
+		?>
+        	
+        	<a href="index.php">所有產品</a>
+            <div style="float:right">
+                <a href="?p=acc"><? if($_COOKIE[m]==''){?>會員登錄<? }else{?>管理帳號<? }?></a>
+                <? if($_COOKIE[m]!=''){?><a href="?p=order">訂單查詢</a>
+                <a href="?p=car">購物車</a>
+                <a href="d.php?d=3">登出</a><? }?>
+            </div>
+        <?
+	}
+	else
+	{
+		?>
+        	<a href="index.php">產品管理</a>
+            <a href="?p=acc">員工管理</a>
+            <a href="?p=order">訂單管理</a>
+            <a href="?p=sp">供應商</a>
+            <a href="?p=lc">物流業者</a>
+            <a style="float:right" href="d.php?d=3">登出</a>
+        <?
+	}
+?>
+</div>
+<div id="main">
+<?
+	if($_GET[p]=='')
+	{
+		if($_COOKIE[m]=='m')
+		{
+			if($_GET[id]=='')
+			{
+				?>
+					<fieldset style=" display:inline; position:relative; right:50px; border:none">
+					<legend align="left">產品資料列表</legend>
+						<table border="1" bordercolor="#EEEEEE"  align="center" width="800" cellpadding="0">
+							<tr>
+								<td>產品圖片</td>
+								<td>名稱</td>
+								<td>價格</td>
+								<td>存貨</td>
+								<td>狀態</td>
+								<td>成本</td>
+								<td>供應商</td>
+								<td>描述</td>
+								<td width="60">操作</td>
+							</tr>
+							<?
+								$sql=$mq("select * from _product");
+								while($a=$mfa($sql))
+								{
+									?>
+										<tr>
+											<td><img width="100" src="up/<?=$a[_picture]?>" /></td>
+											<td><?=$a[_name]?></td>
+											<td><?=$a[_price]?></td>
+											<td><?=$a[_inventory]?></td>
+											<td><?=$productstatus[$a[_status]]?></td>
+											<td><?=$a[_costprice]?></td>
+											<td><?=$mr($mq("select * from _supplier where _supplierid='$a[_supplierid]'"),0,_name)?></td>
+											<td width="200"><?=$a[_description]?></td>
+											<td><button type="button" onclick="loc('index.php?id=<?=$a[_productid]?>')">修改</button>
+											<button type="button" onclick="loc('d.php?d=13&id=<?=$a[_productid]?>')">刪除</button></td>
+										</tr>
+									<?
+								}
+							?>
+						</table><br />
+					</fieldset>
+					<fieldset style="display:inline; position:fixed; right:30px; background:#fff">
+                    <a onclick="$('#f7').fadeToggle()" style="float:right; border:thin #000 solid; padding:2px; cursor:pointer">close&open</a><br />
+                    	<legend>新增產品</legend>
+							<form style="display:none" id="f7" action="d.php?d=7" method="post" enctype="multipart/form-data">
+								<p>產品名稱<input name="n" type="text" /></p>
+								<p>產品價格<input name="p" type="text" /></p>
+								<p>存貨數量<input name="i" type="text" /></p>
+								<p>產品描述<textarea style="padding:5px; margin:1px 5px; resize:none; width:160px;" name="d"></textarea></p>
+								<p>產品圖片<input name="img" type="file" /></p>
+								<p>產品成本<input name="cp" type="text" /></p>
+								<p>供應商
+                                	<select name="sp">
+                                    	<?
+											$sql=$mq("select * from _supplier");
+											while($a=$mfa($sql))
+											{
+												?><option value="<?=$a[_supplierid]?>"><?=$a[_name]?></option><?
+											}
+										?>
+                                    </select>
+                                </p>
+								<p>產品狀態
+									<select name="s"><?
+										foreach($productstatus as $key=>$ps){
+											?>
+												<option value="<?=$key?>"><?=$ps?></option>
+											<?
+										}
+									?></select>
+								</p>
+								<p><button type="button" onclick="ck('f7')">確定送出</button></p>
+								<p></p>
+							</form>
+					</fieldset>
+				<?
+			}
+			else
+			{
+				$pid=$mq("select * from _product where _productid='$_GET[id]'");
+				?>
+                	<fieldset style="display:inline; position:relative; border:none; top:20px">
+                    <form id="f8" action="d.php?d=8&id=<?=$_GET[id]?>" method="post" enctype="multipart/form-data">
+                        <div style="float:left; margin-right:50px"><img src="up/<?=$mr($pid,0,_picture)?>" width="250" style="border:thin #000 solid;" /><br /><input name="img" type="file" />
+                        </div>
+                        <div style="float:right">
+                        <p>產品名稱<input name="n" type="text" value="<?=$mr($pid,0,_name)?>" /></p>
+                        <p>產品價格<input name="p" type="text" value="<?=$mr($pid,0,_price)?>" /></p>
+                        <p>存貨數量<input name="i" type="text" value="<?=$mr($pid,0,_inventory)?>" /></p>
+                        <p>產品描述<textarea style="padding:5px; margin:1px 5px; resize:none; width:160px;" name="d"><?=$mr($pid,0,_description)?></textarea></p>
+                        <p>產品成本<input name="cp" type="text" value="<?=$mr($pid,0,_costprice)?>" /></p>
+                        <p>供應商
+                            <select name="sp">
+                                <?
+                                    $sql=$mq("select * from _supplier");
+                                    while($a=$mfa($sql))
+                                    {
+                                        ?><option value="<?=$a[_supplierid]?>" <? if($mr($pid,0,_supplierid)==$a[_supplierid]){?> selected="selected"<? }?>><?=$a[_name]?></option><?
+                                    }
+                                ?>
+                            </select>
+                        </p>
+                        <p>產品狀態
+                            <select name="s"><?
+                                foreach($productstatus as $key=>$ps){
+                                    ?>
+                                        <option value="<?=$key?>"><?=$ps?></option>
+                                    <?
+                                }
+                            ?></select>
+                        </p>
+                        <p><button type="button" onclick="ck('f8')">確定送出</button></p>
+                        </div>
+                    </form>
+					</fieldset>
+                <?
+			}
+		}
+		else
+		{
+			if($_GET[id]=='')
+			{
+				$sql=$mq("select * from _product where _status=0");
+				while($a=$mfa($sql))
+				{
+					?>
+						<div style=" display:inline-table; padding:10px;">
+                            <a href="?id=<?=$a[_productid]?>">
+                                <table border="0">
+                                    <tr>
+                                    	<td><img src="up/<?=$a[_picture]?>" height="250" style="border:thin #eee solid;" /></td>
+                                    </tr>
+                                    <tr align="left">
+                                    	<td><?=$a[_name]?><span style="float:right">NT.<?=$a[_price]?></span></td>
+                                    </tr>
+                                </table>
+                            </a>
+						</div>
+					<?
+				}
+			}
+			else
+			{
+				$pid=$mq("select * from _product where _productid='$_GET[id]'");
+				?>
+                	<fieldset style="display:inline; position:relative; border:none; top:100px">
+                    <form id="f14" action="d.php?d=14&pid=<?=$_GET[id]?>&cid=<?=$_COOKIE[user]?>&price=<?=$mr($pid,0,_price)?>" method="post">
+                    <div style="float:left; margin-right:50px">
+                    	<img src="up/<?=$mr($pid,0,_picture)?>" width="300" style="border:thin #ccc solid;" />
+                    </div>
+                    <div style="float:right">
+                    	<p style="font-size:36px"><?=$mr($pid,0,_name)?></p>
+                        <table border="0" width="330">
+                            <tr>
+                                <td style="border:thin #ccc solid">價格</td>
+                                <td style="font-size:24px;">NT.<?=$mr($pid,0,_price)?></td>
+                            </tr>
+                            <tr>
+                                <td style="border:thin #ccc solid">產品描述</td>
+                                <td style="border:thin #ccc solid; text-align:left; word-break:break-strict" width="200"><?=$mr($pid,0,_description)?></td>
+                            </tr>
+                            <?
+								//產品評論score判斷
+								$fk=$mq("select * from _productreview");
+								while($f=$mfa($fk))
+								{
+									$p = split(",",$f[_productid]);
+									$s = split(",",$f[_score]);
+									foreach($p as $key=>$pp){
+										$pro[]=$pp;
+										$sco[]=$s[$key];
+									}
+								}
+								$scoall=count($sco);
+								foreach($pro as $key=>$v)
+								{
+									if(!in_array($v,$tmp))
+									{
+										$scotot=0;
+										$x=0;
+										for($j=0;$j<$scoall;$j++)
+										{
+											if($pro[$j]==$v)
+											{
+												$x++;
+												if(!in_array($v,$proset))
+													$proset[]=$v;//被評分產品
+												$scotot=($scotot+$sco[$j])/$x;
+											}
+										}
+										$scototbyp[]=$scotot;//被評分產品分數
+									}
+									$tmp[]=$v;
+								}
+								if(in_array($_GET[id],$proset))
+								{
+									foreach($proset as $key=>$v)
+									{
+										if($_GET[id]==$v)
+										{
+											?>
+												<tr>
+													<td style="border:thin #ccc solid" title="買家購買後心得平均分數，最高為5分">評價分數</td>
+													<td style="border:thin #ccc solid"><?=round($scototbyp[$key],1)?> 分</td>
+												</tr>
+											<?
+										}
+									}
+								}
+								if($_COOKIE[m]=='c')
+								{ 
+									?>
+                                        <tr>
+                                            <td>數量</td>
+                                            <td><span class="fkb" onclick="up()">-</span><input name="nu" id="num" type="text" style="width:50px" readonly="readonly" value="1" /><span class="fkb" onclick="down()">+</span></td>
+                                        </tr>
+									<?
+								}
+							?>
+                        </table>
+                        <?
+							if($_COOKIE[m]=='c'){
+								?>
+									<button>加入購物車</button>
+								<?
+							}
+						?>
+                   	</div>
+                    </form>
+					</fieldset>
+                <?
+			}
+		}
+	}
+	else if($_GET[p]=='acc')
+	{
+		if($_COOKIE[m]=='')
+		{
+			?>
+				<fieldset style="width:300px; display:inline; border:#93A29B medium solid; position:relative; top:-70px">
+					<legend>會員登入</legend>	
+					<form id="f1" action="d.php?d=1" method="post">
+						<p><input name="l" type="text" placeholder="會員帳號" /></p>
+						<p><input name="p" type="password" placeholder="會員密碼" /></p>
+						<p><button type="button" onclick="ck('f1')">登入</button></p>
+					</form>
+				</fieldset>
+				<fieldset style="width:400px; display:inline; border:none; position:relative; top:50px">
+					首次購物？<br />
+					加入會員	
+					<form id="f2" action="d.php?d=2" method="post">
+						<p>會員帳號<input name="l" type="text" /></p>
+						<p>會員密碼<input name="p" type="password" /></p>
+						<p>會員姓名<input name="n" type="text" /></p>
+						<p>會員手機<input name="t1" type="text" /></p>
+						<p>會員家電<input name="t2" type="text" /></p>
+						<p>電子信箱<input name="e" type="text" /></p>
+						<p><button type="button" onclick="ck('f2')">確定送出</button></p>
+						<p></p>
+					</form>
+				</fieldset>
+			<?
+		}
+		else if($_COOKIE[m]=='m')
+		{
+			if($_GET[id]==''){
+				?>
+				<fieldset style=" display:inline; border:none; position:relative; top:0px">
+				<legend align="left">員工資料列表</legend>
+					<table border="1" bordercolor="#EEEEEE" align="center" width="600" cellpadding="5">
+						<tr>
+							<td>員工姓名</td>
+							<td>員工帳號</td>
+							<td>員工密碼</td>
+						</tr>
+						<?
+							$sql=$mq("select * from _staff");
+							while($a=$mfa($sql))
+							{
+								?>
+									<tr>
+										<td><?=$a[_name]?></td>
+										<td><?=$a[_staffaccount]?></td>
+										<td><?=$a[_password]?></td>
+										<td><button type="button" onclick="loc('?p=acc&id=<?=$a[_staffid]?>')">修改</button></td>
+									</tr>
+								<?
+							}
+						?>
+					</table><br />
+				</fieldset>
+				<fieldset style="width:300px; border:none; display:inline; position:relative; top:75px">
+					<legend>新增員工</legend>
+						<form id="f5" action="d.php?d=5" method="post">
+							<p>員工姓名<input name="n" type="text" /></p>
+							<p>員工帳號<input name="l" type="text" /></p>
+							<p>員工密碼<input name="p" type="password" /></p>
+							<p><button type="button" onclick="ck('f5')">確定送出</button></p>
+							<p></p>
+						</form>
+				</fieldset>
+				<?
+			}
+			else
+			{
+				?>
+                    <fieldset style="width:600px; display:inline; border:none;  position:relative; top:50px">
+                    <legend style="font-size:36px;" align="left">編輯員工資料</legend>
+                    <form id="f6" action="d.php?d=6&id=<?=$_GET[id]?>" method="post">
+                        <table border="0" align="center" width="300px" cellpadding="5">
+                            <?
+                                $sql=$mq("select * from _staff where _staffid='$_GET[id]'");
+                                while($a=$mfa($sql))
+                                {
+                                    ?>
+                                        <tr>
+                                            <td>員工帳號</td>
+                                            <td><?=$a[_staffaccount]?></td>
+                                        </tr>
+                                        <tr>
+                                            <td>員工密碼</td>
+                                            <td><input name="p" type="password" value="<?=$a[_password]?>"/></td>
+                                        </tr>
+                                        <tr>
+                                            <td>員工姓名</td>
+                                            <td><input name="n" type="text" value="<?=$a[_name]?>"/></td>
+                                        </tr>
+                                    <?
+                                }
+                            ?>
+                        </table><br />
+                        <button type="button" onclick="ck('f6')">確定修改</button>
+                    </form>
+                    </fieldset>
+				<?
+			}
+		}
+		else if($_COOKIE[m]=='c')
+		{
+			?>
+            <fieldset style="width:600px; display:inline; border:none;  position:relative; top:50px">
+            <legend style="font-size:36px;" align="left">管理帳號</legend>
+            <form id="f4" action="d.php?d=4" method="post">
+                <table border="0" align="center" width="300px" cellpadding="5">
+                    <?
+                        $sql=$mq("select * from _customer where _customerid='$_COOKIE[user]'");
+                        while($a=$mfa($sql))
+                        {
+                            ?>
+                                <tr>
+                                    <td>會員帳號</td>
+                                    <td><?=$a[_account]?></td>
+                                </tr>
+                                <tr>
+                                    <td>會員密碼</td>
+                                    <td><input name="p" type="password" value="<?=$a[_password]?>"/></td>
+                                </tr>
+                                <tr>
+                                    <td>會員姓名</td>
+                                    <td><input name="n" type="text" value="<?=$a[_name]?>"/></td>
+                                </tr>
+                                <tr>
+                                    <td>會員手機</td>
+                                    <td><input name="t1" type="text" value="<?=$a[_mobilephone]?>" /></td>
+                                </tr>
+                                <tr>
+                                    <td>會員家電</td>
+                                    <td><input name="t2" type="text" value="<?=$a[_homephone]?>"/></td>
+                                </tr>
+                                <tr>
+                                    <td>電子信箱</td>
+                                    <td><input name="e" type="text" value="<?=$a[_emailaddress]?>" /></td>
+                                </tr>
+                            <?
+                        }
+                    ?>
+                </table><br />
+                <button type="button" onclick="ck('f4')">確定修改</button>
+            </form>
+            </fieldset>
+            <?
+		}
+	}
+	else if($_GET[p]=='order')
+	{
+		?>
+			<fieldset style="width:600px; display:inline; border:none;  position:relative; top:50px">
+			<legend style="font-size:36px;" align="left"><? if($_COOKIE[m]=='c'){echo "查看訂單明細";}else{?>訂單管理<? }?></legend>
+				<table border="0" width="700" style="border:thin #EEE solid" cellpadding="5" cellspacing="5">
+					<tr>
+						<td>訂單編號</td>
+						<td width="200">商品</td>
+						<td>總金額</td>
+						<td>訂單狀態</td>
+						<? if($_COOKIE[m]=='c'){?><td>操作</td><? ;}else{?><td width="150">訂單評價</td><? }?>
+					</tr>
+					<?
+						if($_COOKIE[m]=='c')
+							$sql=$mq("select * from _order where _customerid='$_COOKIE[user]'");
+						else
+							$sql=$mq("select * from _order");
+						while($a=$mfa($sql))
+						{
+							$fuck = $mr($mq("select * from _productreview where _orderid='$a[_orderid]'"),0,"_productreviewid");
+							$sqb=$mq("select * from _orderdetail where _orderid='$a[_orderid]'");
+							$pid=$mr($sqb,0,_productid);
+							$pe=$mr($sqb,0,_price);
+							$qy=$mr($sqb,0,_quantity);
+							$pid=split(",",$pid);
+							$pe=split(",",$pe);
+							$qy=split(",",$qy);
+							?>
+								<tr>
+									<td><?=$mr($sqb,0,_orderid)?></td>
+									<td align="left">
+									<?
+										foreach($pid as $key=>$p)
+										{
+										echo $mr($mq("select * from _product where _productid='$p'"),0,"_name")." ".$pe[$key]."元 ".$qy[$key]."件<br />";
+										}
+									?>
+									</td>
+									<td>NT.<?=$a[_totalamount]?></td>
+									<td><? if($_COOKIE[m]=='c'){echo $orderstatus[$a[_orderstatus]]; }else{?>
+									<select onchange="loc('d.php?d=18&oid=<?=$a[_orderid]?>&v='+this.value)">
+                                    <?
+										foreach($orderstatus as $key=>$od)
+										{
+											?>
+                                            	<option value="<?=$key?>" <? if($a[_orderstatus]==$key){?> selected="selected"<? }?>><?=$od?></option>
+                                            <?
+										}
+									?>
+                                    </select><br />
+                                    <select onchange="loc('d.php?d=19&oid=<?=$a[_orderid]?>&v='+this.value)">
+                                    <?
+									if($a[_logisticcompanyid]==''){
+										?>
+										<option selected="selected" >請選擇一家物流公司</option>
+										<?
+									}
+										
+										$sqll=$mq("select * from _logisticcompany");
+										while($aa=$mfa($sqll))
+										{
+											
+											?>
+                                            	<option value="<?=$aa[_logisticcompanyid]?>" <? if($aa[_logisticcompanyid]==$a[_logisticcompanyid]){?> selected="selected"<? }?>><?=$aa[_name]?></option>
+                                            <?
+										}
+									?>
+                                    </select>
+									<? }?></td>
+									<? if($_COOKIE[m]=='c'){?><td><? if($a[_orderstatus]<1){?><button onclick="loc('d.php?d=17&orderid=<?=$a[_orderid]?>')">取消訂單</button><? } if($a[_orderstatus]==3 && $fuck==''){?><button onclick="loc('?p=pdrw&oid=<?=$a[_orderid]?>')">填寫評價</button><? }?></td><? }
+									if($_COOKIE[m]=='m')
+									{
+										$rw=$mr($mq("select * from _productreview where _orderid='$a[_orderid]'"),0,_suggestion);
+										if(!$rw)
+											$rw="買家尚未填寫評價";
+										?>
+											<td><?=$rw?></td>
+										<?
+									}
+								?>
+								</tr>
+							<?
+						}
+					?>
+				</table>
+			</form>
+			</fieldset>
+		<?
+	}
+	else if($_GET[p]=='car')
+	{
+		if($_GET[step]=='')
+		{
+			?>
+			<fieldset style=" display:inline; border:none; position:relative; top:30px">
+				<legend align="left" style="font-size:36px">Check Order 購物清單確認</legend>
+				<form action="?p=car&step=2" method="post">
+                <?
+					$sumn=$mfa($mq("select sum(_quantity) from _shoppingcart where _customerid='$_COOKIE[user]' && _status='0'"));
+					$sump=$mfa($mq("select sum(_totalamount	) from _shoppingcart where _customerid='$_COOKIE[user]' && _status='0'"));
+					//產品編號
+					$sid=$mq("select * from _shoppingcart where _customerid='$_COOKIE[user]' && _status='0'");
+					while($b=$mfa($sid))
+					{
+						$ssid[] = $b[_shoppingcartid];
+						$ppid[] = $b[_productid];
+						$qua[] = $b[_quantity];
+						$pri[] = $b[_price];
+					}
+					$st=implode(",",$ssid);
+					$pt=implode(",",$ppid);
+					$qy=implode(",",$qua);
+					$pe=implode(",",$pri);
+				?>
+                <input type="hidden" value="<?=$st?>" name="ssid" />
+                <input type="hidden" value="<?=$pt?>" name="ppid" />
+                <input type="hidden" value="<?=$_COOKIE[user]?>" name="cid" />
+                <input type="hidden" value="<?=$sump[0]?>" name="tot" />
+                <input type="hidden" value="<?=$qy?>" name="qua" />
+                <input type="hidden" value="<?=$pe?>" name="pri" />
+				<table border="0" width="800" align="center">
+					<tr>
+						<td width="100"></td>
+						<td width="200"></td>
+						<td width="100" style="border:thin solid #000">數量</td>
+						<td width="100" style="border:thin solid #000">單價</td>
+						<td width="100" style="border:thin solid #000">小計</td>
+						<td width="50" style="border:thin solid #000">刪除</td>
+					</tr>
+					<?
+						$sql=$mq("select * from _shoppingcart where _customerid='$_COOKIE[user]' && _status='0'");
+						while($a=$mfa($sql))
+						{
+							$pd=$mq("select * from _product where _productid='$a[_productid]'");
+							?>
+								<tr>
+									<td ><img src="up/<?=$mr($pd,0,_picture)?>" width="100" /></td>
+									<td><?=$mr($pd,0,_name)?></td>
+									<td>
+										<select onchange="loc('?p=car&pid=<?=$a[_productid]?>&cid=<?=$_COOKIE[user]?>&price=<?=$a[_price]?>&nu='+this.value)">
+											<?
+												for($i=1;$i<=10;$i++)
+												{
+													?>
+														<option value="<?=$i?>" <? if($a[_quantity]==$i)echo "selected"?>><?=$i?></option>
+													<?
+												}
+											?>
+										</select>
+									</td>
+									<td>NT.<?=$a[_price]?></td>
+									<td>NT.<?=$a[_totalamount]?></td>
+									<td><button type="button" onclick="loc('d.php?d=15&pid=<?=$a[_productid]?>&cid=<?=$a[_customerid]?>')">刪除</button></td>
+								</tr>
+							<?
+						}
+					?>
+				</table>
+				<p align="right">共<?=($sumn[0])?$sumn[0]:"0"?>件/商品總金額：<?=($sump[0])?$sump[0]:"0"?>元</p>
+				<?
+					if($sump[0])
+					{
+						?>
+						<button>下一步</button>
+						<?
+					}
+				?>
+                </form>
+			</fieldset>
+			<?
+			if($_GET[pid]!='')
+			{
+				$nu=$_GET[nu];
+				$tot=$nu*$_GET[price];
+				$mq("update _shoppingcart set _quantity='$nu',_totalamount='$tot' where _productid='$_GET[pid]' && _customerid='$_GET[cid]'");
+				echo js("loc('index.php?p=car')");
+			}
+		}
+		else if($_GET[step]==2)
+		{
+			?>	
+            	<fieldset style=" display:inline; border:none; position:relative; top:30px">
+               	<legend align="left" style="font-size:36px">輸入收件人資料</legend>
+                <form id="f15" action="d.php?d=16" method="post">
+				<input type="hidden" value="<?=$_POST[ssid]?>" name="ssid" />
+				<input type="hidden" value="<?=$_POST[ppid]?>" name="ppid" />
+                <input type="hidden" value="<?=$_POST[cid]?>" name="cid" />
+                <input type="hidden" value="<?=$_POST[tot]?>" name="tot" />
+                <input type="hidden" value="<?=$_POST[qua]?>" name="qua" />
+                <input type="hidden" value="<?=$_POST[pri]?>" name="pri" />
+                <table border="0" width="300" cellpadding="5">
+                	<tr>
+                    	<td>收件人</td>
+                        <td><input type="text" name="rp" /></td>
+                    </tr>
+                	<tr>
+                    	<td>手機</td>
+                        <td><input type="text" name="m" /></td>
+                    </tr>
+                	<tr>
+                    	<td>地址</td>
+                        <td><input type="text" name="a" /></td>
+                    </tr>
+                    <tr>
+                    	<td>付款方式</td>
+                        <td>
+                        <select id="way" name="p" onchange="cdv()">
+                        	<option value="0">貨到付款</option>
+                            <option value="1">信用卡付款</option>
+                        </select></td>
+                    </tr>
+                    <tr id="card" style="display:none">
+                    	<td>信用卡帳號</td>
+                        <td><input type="text" name="cd" /></td>
+                    </tr>
+                </table><br />
+                <button type="button" onclick="ck('f15')">確定送出</button>
+                </form>
+               </fieldset>
+            <?
+		}
+	}
+	else if($_GET[p]=='sp')
+	{
+		if($_GET[id]=='')
+		{
+			?>
+			<fieldset style=" display:inline; border:none; position:relative; top:0px">
+			<legend align="left">供應商資料列表</legend>
+				<table border="1" bordercolor="#EEEEEE" align="center" width="600" cellpadding="5">
+					<tr>
+						<td>供應商名稱</td>
+						<td>聯絡人</td>
+						<td>電話</td>
+					</tr>
+					<?
+						$sql=$mq("select * from _supplier");
+						while($a=$mfa($sql))
+						{
+							?>
+								<tr>
+									<td><?=$a[_name]?></td>
+									<td><?=$a[_contactperson]?></td>
+									<td><?=$a[_phone]?></td>
+									<td><button type="button" onclick="loc('?p=sp&id=<?=$a[_supplierid]?>')">修改</button></td>
+								</tr>
+							<?
+						}
+					?>
+				</table><br />
+			</fieldset>
+			<fieldset style="width:300px; border:none; display:inline; position:relative; top:75px">
+				<legend>新增供應商</legend>
+					<form id="f9" action="d.php?d=9" method="post">
+						<p>名稱<input name="n" type="text" /></p>
+						<p>聯絡人<input name="c" type="text" /></p>
+						<p>電話<input name="p" type="text" /></p>
+						<p><button type="button" onclick="ck('f9')">確定送出</button></p>
+						<p></p>
+					</form>
+			</fieldset>
+			<?
+		}
+		else
+		{
+			?>
+				<fieldset style="width:600px; display:inline; border:none;  position:relative; top:50px">
+				<legend style="font-size:36px;" align="left">編輯供應商資料</legend>
+				<form id="f10" action="d.php?d=10&id=<?=$_GET[id]?>" method="post">
+					<table border="0" align="center" width="300px" cellpadding="5">
+						<?
+							$sql=$mq("select * from _supplier where _supplierid='$_GET[id]'");
+							while($a=$mfa($sql))
+							{
+								?>
+									<tr>
+										<td>名稱</td>
+										<td><?=$a[_name]?></td>
+									</tr>
+									<tr>
+										<td>聯絡人</td>
+										<td><input name="c" type="text" value="<?=$a[_contactperson]?>"/></td>
+									</tr>
+									<tr>
+										<td>電話</td>
+										<td><input name="p" type="text" value="<?=$a[_phone]?>"/></td>
+									</tr>
+								<?
+							}
+						?>
+					</table><br />
+					<button type="button" onclick="ck('f10')">確定修改</button>
+				</form>
+				</fieldset>
+			<?
+		}
+	}
+	else if($_GET[p]=='lc')
+	{
+		if($_GET[id]=='')
+		{
+			?>
+			<fieldset style=" display:inline; border:none; position:relative; top:0px">
+			<legend align="left">物流業者資料列表</legend>
+				<table border="1" bordercolor="#EEEEEE" align="center" width="600" cellpadding="5">
+					<tr>
+						<td>名稱</td>
+						<td>手機</td>
+						<td>信箱</td>
+					</tr>
+					<?
+						$sql=$mq("select * from _logisticcompany");
+						while($a=$mfa($sql))
+						{
+							?>
+								<tr>
+									<td><?=$a[_name]?></td>
+									<td><?=$a[_phone]?></td>
+									<td><?=$a[_emailaddress]?></td>
+									<td><button type="button" onclick="loc('?p=lc&id=<?=$a[_logisticcompanyid]?>')">修改</button></td>
+								</tr>
+							<?
+						}
+					?>
+				</table><br />
+			</fieldset>
+			<fieldset style="width:300px; border:none; display:inline; position:relative; top:75px">
+				<legend>新增物流業者</legend>
+					<form id="f11" action="d.php?d=11" method="post">
+						<p>名稱<input name="n" type="text" /></p>
+						<p>手機<input name="p" type="text" /></p>
+						<p>信箱<input name="e" type="text" /></p>
+						<p><button type="button" onclick="ck('f11')">確定送出</button></p>
+						<p></p>
+					</form>
+			</fieldset>
+			<?
+		}
+		else
+		{
+			?>
+				<fieldset style="width:600px; display:inline; border:none;  position:relative; top:50px">
+				<legend style="font-size:36px;" align="left">編輯物流業者資料</legend>
+				<form id="f12" action="d.php?d=12&id=<?=$_GET[id]?>" method="post">
+					<table border="0" align="center" width="300px" cellpadding="5">
+						<?
+							$sql=$mq("select * from _logisticcompany where _logisticcompanyid='$_GET[id]'");
+							while($a=$mfa($sql))
+							{
+								?>
+									<tr>
+										<td>名稱</td>
+										<td><?=$a[_name]?></td>
+									</tr>
+									<tr>
+										<td>手機</td>
+										<td><input name="p" type="text" value="<?=$a[_phone]?>"/></td>
+									</tr>
+									<tr>
+										<td>信箱</td>
+										<td><input name="e" type="text" value="<?=$a[_emailaddress]?>"/></td>
+									</tr>
+								<?
+							}
+						?>
+					</table><br />
+					<button type="button" onclick="ck('f12')">確定修改</button>
+				</form>
+				</fieldset>
+			<?
+		}
+	}
+	else if($_GET[p]=='pdrw')
+	{
+		?>
+            <fieldset style=" display:inline; border:none;  position:relative; top:50px">
+            <legend>填寫評價</legend>
+            <form action="d.php?d=20&oid=<?=$_GET[oid]?>" method="post">
+            <table border="1">
+            <?
+				$sql=$mq("select * from _orderdetail where _orderid='$_GET[oid]'");
+				while($a=$mfa($sql))
+				{
+					$p=split(",",$a[_productid]);
+					foreach($p as $key=>$pp){
+						$product=$mq("select * from _product where _productid='$pp'");
+						?>
+						<tr>
+							<td>產品名稱</td>
+							<td><?=$mr($product,0,_name)?></td>
+						</tr>
+						<tr>
+							<td>產品分數</td>
+							<td>
+                            <?
+								for($i=1;$i<=5;$i++){
+									echo $i?><input name="score<?=$key?>" value="<?=$i?>" type="radio" /><?
+								}
+							?>
+                            </td>
+						</tr>
+						<?
+					}
+				}
+			?>  
+            <tr>
+            	<td>建議</td>
+                <td><textarea name="sg"></textarea></td>
+            </tr>
+            </table><br />
+            <button>送出評價</button>
+            </form>
+            </fieldset>
+        <?
+	}
+?>
+</div>
+<div id="footer">
+		TEL：02-2222-2222<br />
+		FAX：02-2222-2222<br />
+		EMAIL：brandyshop@gmail.com<br />
+		© BRANDY FASHION SHOP CO. LTD. ALL RIGHT RESERVED
+</div>
+</body>
+</html>
